@@ -1,0 +1,30 @@
+# Managed by Ansible - do not edit manually!
+services:
+  surrealdb:
+    image: surrealdb/surrealdb:v2
+    command: start --user {{ surreal_user }} --pass {{ surreal_password }} --bind 0.0.0.0:8000 rocksdb:/mydata/mydatabase.db
+    ports:
+      - "{{ surreal_expose_port }}:8000"
+    volumes:
+      - ./surreal_data:/mydata
+    restart: always
+
+  open_notebook:
+    image: lfnovo/open_notebook:v1-latest-single
+    pull_policy: always
+    ports:
+      - "{{ open_notebook_fe_expose_port }}:8502"
+      - "{{ open_notebook_api_expose_port }}:5055"
+    environment:
+      - OPEN_NOTEBOOK_ENCRYPTION_KEY={{ open_notebook_encryption_key }}
+      - SURREAL_URL=ws://surrealdb:{{ surreal_expose_port }}/rpc
+      - SURREAL_USER={{ surreal_user }}
+      - SURREAL_PASSWORD={{ surreal_password }}
+      - SURREAL_NAMESPACE=open_notebook
+      - SURREAL_DATABASE=open_notebook
+    volumes:
+      - ./notebook_data:/app/data
+      - ./surreal_data:/mydata
+    depends_on:
+      - surrealdb
+    restart: always

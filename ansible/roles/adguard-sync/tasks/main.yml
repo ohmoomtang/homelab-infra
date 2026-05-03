@@ -1,0 +1,22 @@
+---
+- name: Include vault vars
+  ansible.builtin.include_vars:
+    file: vault.yml
+
+- name: Run AdGuard Sync
+  community.docker.docker_container:
+    name: adguardhome-sync
+    image: 'ghcr.io/bakito/adguardhome-sync:{{ adguard_sync_image_tag }}'
+    state: started
+    restart_policy: unless-stopped
+    published_ports:
+      - '8080:8080'
+    env:
+      ORIGIN_URL: 'http://{{ adguard_primary_ip }}:80'
+      ORIGIN_USERNAME: '{{ adguard_username }}'
+      ORIGIN_PASSWORD: '{{ adguard_password }}'
+      REPLICA1_URL: 'http://{{ adguard_secondary_ip }}:80'
+      REPLICA1_USERNAME: '{{ adguard_username }}'
+      REPLICA1_PASSWORD: '{{ adguard_password }}'
+      LOG_LEVEL: 'info'
+      CRON: '*/10 * * * *'

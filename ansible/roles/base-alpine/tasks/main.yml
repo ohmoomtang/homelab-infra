@@ -1,0 +1,51 @@
+---
+- name: Update apk cache (Alpine)
+  community.general.apk:
+    update_cache: yes
+  when: ansible_os_family == "Alpine"
+
+- name: Install common packages (Alpine)
+  community.general.apk:
+    name:
+      - curl
+      - ca-certificates
+      - py3-requests
+      - tzdata
+      - sudo
+    state: present
+
+- name: Set timezone
+  community.general.timezone:
+    name: '{{ base_timezone }}'
+
+- name: Create admin user
+  ansible.builtin.user:
+    name: '{{ base_admin_user }}'
+    groups: wheel
+    append: yes
+    shell: /bin/bash
+    create_home: true
+    state: present
+  when: ansible_os_family == "Alpine"
+
+- name: Add SSH public key for admin user
+  ansible.posix.authorized_key:
+    user: '{{ base_admin_user }}'
+    state: present
+    key: "{{ lookup('file', '~/.ssh/id_ed25519_homelab.pub') }}"
+  when: not ansible_check_mode
+
+- name: Allow admin user passwordless sudo
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers.d/{{ base_admin_user }}
+    line: '{{ base_admin_user }} ALL=(ALL) NOPASSWD:ALL'
+    create: true
+    validate: visudo -cf %s
+    mode: '0440'
+
+- name: Harden SSH config
+  ansible.builtin.template:
+    src: sshd_config.j2
+    dest: /etc/ssh/sshd_config.d/99-hardening.conf
+    mode: '0600'
+  notify: Restart sshd

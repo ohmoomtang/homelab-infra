@@ -1,0 +1,7 @@
+---
+- name: Base setup for all LXC containers
+  hosts: lxc
+  become: true
+  gather_facts: false
+  roles:
+    - base

@@ -1,0 +1,8 @@
+---
+- name: Setup Monitoring Stack (Grafana + Loki + Prometheus)
+  hosts: monitoring
+  become: yes
+  roles:
+    - base
+    - docker
+    - monitoring

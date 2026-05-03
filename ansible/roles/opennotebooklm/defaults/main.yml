@@ -1,0 +1,7 @@
+surreal_user: root
+surreal_password: '{{ vault_surreal_password }}'
+surreal_expose_port: 8000
+open_notebook_encryption_key: '{{ vault_open_notebook_encryption_key }}'
+open_notebook_fe_expose_port: 8502
+open_notebook_api_expose_port: 5055
+open_notebook_project_dir: /opt/open_notebook

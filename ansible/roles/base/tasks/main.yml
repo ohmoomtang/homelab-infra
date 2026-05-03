@@ -1,0 +1,64 @@
+---
+- name: Update apt cache and upgrade packages
+  ansible.builtin.apt:
+    update_cache: true
+    upgrade: dist
+    cache_valid_time: 3600
+
+- name: Install base packages
+  ansible.builtin.apt:
+    name: '{{ base_packages }}'
+    state: present
+
+- name: Set timezone
+  community.general.timezone:
+    name: '{{ base_timezone }}'
+
+- name: Create admin user
+  ansible.builtin.user:
+    name: '{{ base_admin_user }}'
+    groups: '{{ base_admin_groups }}'
+    shell: /bin/bash
+    create_home: true
+    state: present
+
+- name: Add SSH public key for admin user
+  ansible.posix.authorized_key:
+    user: '{{ base_admin_user }}'
+    state: present
+    key: "{{ lookup('file', '~/.ssh/id_ed25519_homelab.pub') }}"
+  when: not ansible_check_mode
+
+- name: Allow admin user passwordless sudo
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers.d/{{ base_admin_user }}
+    line: '{{ base_admin_user }} ALL=(ALL) NOPASSWD:ALL'
+    create: true
+    validate: visudo -cf %s
+    mode: '0440'
+
+- name: Harden SSH config
+  ansible.builtin.template:
+    src: sshd_config.j2
+    dest: /etc/ssh/sshd_config.d/99-hardening.conf
+    mode: '0600'
+  notify: Restart sshd
+
+- name: Enable UFW and allow SSH
+  community.general.ufw:
+    state: enabled
+    rule: allow
+    port: '{{ ssh_port }}'
+    proto: tcp
+
+- name: Enable unattended-upgrades
+  ansible.builtin.service:
+    name: unattended-upgrades
+    enabled: true
+    state: started
+  when: not ansible_check_mode
+
+- name: Clean apt cache (Debian/Ubuntu)
+  ansible.builtin.apt:
+    autoclean: yes
+    autoremove: yes

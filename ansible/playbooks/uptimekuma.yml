@@ -1,0 +1,8 @@
+---
+- name: Setup Uptime Kuma
+  hosts: uptime-kuma
+  become: true
+  roles:
+    - base
+    - docker
+    - uptimekuma

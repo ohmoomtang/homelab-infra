@@ -1,0 +1,140 @@
+---
+- name: Include vault vars
+  ansible.builtin.include_vars:
+    file: vault.yml
+
+- name: Create monitoring directory
+  ansible.builtin.file:
+    path: /opt/monitoring
+    state: directory
+    mode: '0755'
+
+- name: Copy loki-config.yml
+  ansible.builtin.copy:
+    dest: /opt/monitoring/loki-config.yml
+    content: |
+      auth_enabled: false
+
+      server:
+        http_listen_port: 3100
+        grpc_listen_port: 9096
+
+      common:
+        instance_addr: 127.0.0.1
+        path_prefix: /loki
+        storage:
+          filesystem:
+            chunks_directory: /loki/chunks
+            rules_directory: /loki/rules
+        replication_factor: 1
+        ring:
+          kvstore:
+            store: inmemory
+
+      query_range:
+        results_cache:
+          cache:
+            embedded_cache:
+              enabled: true
+              max_size_mb: 100
+
+      schema_config:
+        configs:
+          - from: 2024-01-01
+            store: tsdb
+            object_store: filesystem
+            schema: v13
+            index:
+              prefix: index_
+              period: 24h
+
+      limits_config:
+        retention_period: 30d
+
+      compactor:
+        working_directory: /loki/compactor
+        retention_enabled: true
+        delete_request_store: filesystem
+
+      ruler:
+        alertmanager_url: http://localhost:9093
+
+- name: Copy prometheus.yml
+  ansible.builtin.copy:
+    dest: /opt/monitoring/prometheus.yml
+    content: |
+      global:
+        scrape_interval: 15s
+        evaluation_interval: 15s
+
+      scrape_configs:
+        - job_name: "prometheus"
+          static_configs:
+            - targets: ["localhost:9090"]
+
+        - job_name: "alloy"
+          static_configs:
+            - targets:
+                - "192.168.0.83:12345"  # adguard-sync
+                - "192.168.0.81:12345"  # monitoring
+                - "192.168.0.82:12345"  # uptime-kuma
+                - "192.168.0.21:12345"  # rabbitmq
+                - "192.168.0.41:12345"  # jellyfin
+                - "192.168.0.22:12345"  # supabase
+
+        - job_name: "node_exporter"
+          metrics_path: /api/v0/component/prometheus.exporter.unix.node/metrics
+          static_configs:
+            - targets:
+                - "192.168.0.83:12345"  # adguard-sync
+                - "192.168.0.81:12345"  # monitoring
+                - "192.168.0.82:12345"  # uptime-kuma
+                - "192.168.0.21:12345"  # rabbitmq
+                - "192.168.0.41:12345"  # jellyfin
+                - "192.168.0.22:12345"  # supabase
+
+- name: Copy docker-compose.yml
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: /opt/monitoring/docker-compose.yml
+
+- name: Start Grafana + Loki + Prometheus
+  community.docker.docker_compose_v2:
+    project_src: /opt/monitoring
+    state: present
+    pull: missing
+
+- name: Wait for Grafana to be ready
+  ansible.builtin.uri:
+    url: 'http://localhost:3000'
+    status_code: 200
+  register: result
+  until: result.status == 200
+  retries: 10
+  delay: 5
+
+- name: Wait for Loki to be ready
+  ansible.builtin.uri:
+    url: 'http://localhost:3100/ready'
+    status_code: 200
+  register: result
+  until: result.status == 200
+  retries: 15
+  delay: 5
+
+- name: Wait for Prometheus to be ready
+  ansible.builtin.uri:
+    url: 'http://localhost:9090/-/ready'
+    status_code: 200
+  register: result
+  until: result.status == 200
+  retries: 15
+  delay: 5
+
+- name: Done!
+  ansible.builtin.debug:
+    msg:
+      - '✅ Grafana : http://{{ ansible_host }}:3000'
+      - '✅ Loki    : http://{{ ansible_host }}:3100'
+      - '✅ Prometheus : http://{{ ansible_host }}:9090'
+      - '👤 Login   : admin / {{ grafana_admin_password }}'

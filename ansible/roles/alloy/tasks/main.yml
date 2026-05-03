@@ -1,0 +1,58 @@
+---
+- name: Allow Alloy metrics port
+  community.general.ufw:
+    rule: allow
+    port: '12345'
+    proto: tcp
+  when: ansible_os_family == "Debian"
+
+- name: Install Alloy
+  ansible.builtin.include_role:
+    name: grafana.grafana.alloy
+  vars:
+    alloy_env_file_vars:
+      CUSTOM_ARGS: '--server.http.listen-addr=0.0.0.0:12345'
+    alloy_config: |
+      // Metrics
+      prometheus.exporter.unix "node" {
+        enable_collectors = ["cpu", "diskstats", "filesystem", "loadavg", "meminfo", "netdev", "uname"]
+      }
+
+      prometheus.scrape "node" {
+        targets    = prometheus.exporter.unix.node.targets
+        forward_to = [prometheus.remote_write.prom.receiver]
+        job_name   = "node_exporter"
+      }
+
+      prometheus.remote_write "prom" {
+        endpoint {
+          url = "{{ prometheus_endpoint }}"
+        }
+      }
+
+      // Logs
+      discovery.docker "containers" {
+        host = "unix:///var/run/docker.sock"
+      }
+
+      discovery.relabel "docker" {
+        targets = discovery.docker.containers.targets
+        rule {
+          source_labels = ["__meta_docker_container_name"]
+          regex         = "/?(.*)"
+          target_label  = "container"
+          action        = "replace"
+        }
+      }
+
+      loki.source.docker "containers" {
+        host    = "unix:///var/run/docker.sock"
+        targets = discovery.relabel.docker.output
+        forward_to = [loki.write.default.receiver]
+      }
+
+      loki.write "default" {
+        endpoint {
+          url = "{{ loki_endpoint }}"
+        }
+      }

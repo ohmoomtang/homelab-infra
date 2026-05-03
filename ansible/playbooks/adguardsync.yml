@@ -1,0 +1,8 @@
+---
+- name: Setup AdGuard Sync
+  hosts: adguard-sync
+  become: true
+  roles:
+    - base
+    - docker
+    - adguard-sync

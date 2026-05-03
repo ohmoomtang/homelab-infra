@@ -1,0 +1,9 @@
+ansible_user: root
+ansible_ssh_private_key_file: ~/.ssh/id_ed25519_homelab
+ansible_python_interpreter: /usr/bin/python3
+
+# base setup vars
+base_timezone: Australia/Sydney
+base_admin_user: oot
+base_admin_groups:
+  - sudo

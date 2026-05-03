@@ -1,0 +1,8 @@
+---
+- name: Setup Supabase
+  hosts: supabase
+  become: true
+  roles:
+    - base
+    - docker
+    - supabase

@@ -1,0 +1,3 @@
+adguard_home_work_dir: /opt/adguardhome/work
+adguard_home_conf_dir: /opt/adguardhome/conf
+adguard_image_tag: 'v0.107.74'

@@ -1,0 +1,13 @@
+# Managed by Ansible - do not edit manually!
+services:
+  vert:
+    image: ghcr.io/vert-sh/vert:latest
+    container_name: vert
+    environment:
+      PUB_HOSTNAME: "{{ vert_hostname }}"
+      PUB_VERTD_URL: "{{ vert_hostname }}"
+      PUB_ENV: production
+      PORT: 80
+    ports:
+      - "{{ vert_port }}:80"
+    restart: unless-stopped

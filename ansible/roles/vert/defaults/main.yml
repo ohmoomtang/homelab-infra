@@ -1,0 +1,3 @@
+vert_port: 3000
+vert_hostname: 'http://192.168.0.72:3000'
+vert_data_dir: /opt/vert

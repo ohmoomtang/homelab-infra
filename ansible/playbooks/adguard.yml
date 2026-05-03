@@ -1,0 +1,10 @@
+---
+- name: Setup AdGuard Home
+  hosts:
+    - adguard-primary
+    - adguard-secondary
+  become: true
+  roles:
+    - base-alpine
+    - docker-alpine
+    - adguard

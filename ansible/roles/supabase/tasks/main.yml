@@ -1,0 +1,75 @@
+- name: Verify Docker is running
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: true
+  when: not ansible_check_mode
+
+- name: Get latest Supabase CLI version
+  ansible.builtin.uri:
+    url: https://api.github.com/repos/supabase/cli/releases/latest
+    return_content: true
+  register: supabase_release
+
+- name: Download Supabase CLI binary
+  ansible.builtin.get_url:
+    url: 'https://github.com/supabase/cli/releases/download/v{{ supabase_cli_version }}/supabase_{{ supabase_cli_version }}_linux_amd64.deb'
+    dest: /tmp/supabase.deb
+    mode: '0644'
+
+- name: Install Supabase CLI from deb
+  ansible.builtin.apt:
+    deb: /tmp/supabase.deb
+    state: present
+
+- name: Create Supabase project directory
+  ansible.builtin.file:
+    path: /opt/supabase
+    state: directory
+    owner: '{{ base_admin_user }}'
+    mode: '0755'
+
+- name: Init Supabase
+  ansible.builtin.shell:
+    cmd: supabase init
+    chdir: /opt/supabase
+    creates: /opt/supabase/supabase/config.toml
+  when: not ansible_check_mode
+
+- name: Start Supabase
+  ansible.builtin.shell:
+    cmd: supabase start
+    chdir: /opt/supabase
+  register: supabase_start
+  when: not ansible_check_mode
+  changed_when: "'Started supabase' in supabase_start.stdout"
+  async: 900
+  poll: 30
+
+- name: Install Supabase systemd service
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/supabase.service
+    content: |
+      [Unit]
+      Description=Supabase Local
+      Requires=docker.service
+      After=docker.service network-online.target
+
+      [Service]
+      Type=oneshot
+      RemainAfterExit=yes
+      WorkingDirectory=/opt/supabase
+      ExecStart=/usr/bin/supabase start
+      ExecStop=/usr/bin/supabase stop
+      TimeoutStartSec=900
+
+      [Install]
+      WantedBy=multi-user.target
+
+- name: Enable and start Supabase service
+  ansible.builtin.systemd:
+    name: supabase
+    enabled: true
+    state: started
+    daemon_reload: true
+  when: not ansible_check_mode

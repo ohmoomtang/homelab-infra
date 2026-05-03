@@ -1,0 +1,11 @@
+# Ansible
+.vault_pass
+*.retry
+
+# General
+.env
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

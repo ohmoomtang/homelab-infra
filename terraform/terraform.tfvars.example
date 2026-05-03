@@ -1,0 +1,5 @@
+# terraform.tfvars.example
+proxmox_pve_endpoint      = "https://192.168.0.88:8006/"
+proxmox_pve_api_token     = "root@pam!terraform=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+proxmox_node              = "pve1"
+default_lxc_root_password = "your-strong-password"

@@ -1,0 +1,12 @@
+base_packages:
+  - curl
+  - wget
+  - vim
+  - htop
+  - git
+  - ufw
+  - unattended-upgrades
+
+ssh_port: 22
+ssh_permit_root_login: 'prohibit-password'
+ssh_password_authentication: 'no'

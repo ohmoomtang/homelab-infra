@@ -1,0 +1,32 @@
+---
+- name: Create Config directory
+  ansible.builtin.file:
+    path: /srv/jellyfin/config
+    state: directory
+    mode: '0755'
+
+- name: Create Cache directory
+  ansible.builtin.file:
+    path: /srv/jellyfin/cache
+    state: directory
+    mode: '0755'
+
+- name: Allow Jellyfin port
+  community.general.ufw:
+    rule: allow
+    port: '8096'
+    proto: tcp
+
+- name: Run Jellyfin Docker container
+  community.docker.docker_container:
+    name: jellyfin
+    image: 'jellyfin/jellyfin:{{ jellyfin_image_tag }}'
+    state: started
+    restart_policy: unless-stopped
+    network_mode: host
+    devices:
+      - /dev/dri/renderD128:/dev/dri/renderD128
+    volumes:
+      - /srv/jellyfin/config:/config
+      - /srv/jellyfin/cache:/cache
+      - /Media:/media

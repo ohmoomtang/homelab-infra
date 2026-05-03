@@ -1,0 +1,8 @@
+---
+- name: Setup Jellyfin
+  hosts: jellyfin
+  become: yes
+  roles:
+    - base
+    - docker
+    - jellyfin

@@ -1,0 +1,30 @@
+# Managed by Ansible - do not edit manually!
+services:
+  uptime-kuma:
+    image: louislam/uptime-kuma:2
+    container_name: uptime-kuma
+    restart: always
+    ports:
+      - "3001:3001"
+    volumes:
+      - "{{ uptimekuma_data_dir }}/data:/app/data"
+    environment:
+      - TZ={{ uptimekuma_timezone }}
+      - UMASK=0022
+    networks:
+      - kuma_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001"]
+      interval: 30s
+      retries: 3
+      start_period: 10s
+      timeout: 5s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  kuma_network:
+    driver: bridge

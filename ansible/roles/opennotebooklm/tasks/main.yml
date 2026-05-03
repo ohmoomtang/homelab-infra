@@ -1,0 +1,33 @@
+---
+- name: Create Open Notebook data directory
+  ansible.builtin.file:
+    path: '{{ open_notebook_project_dir }}'
+    state: directory
+    mode: '0755'
+
+- name: Deploy docker-compose.yml
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: '{{ open_notebook_project_dir }}/docker-compose.yml'
+    mode: '0644'
+  notify: Restart Open Notebook LM
+
+- name: Create surreal_data directory with correct permissions
+  ansible.builtin.file:
+    path: '{{ open_notebook_project_dir }}/surreal_data'
+    state: directory
+    mode: '0777'
+    owner: '1000'
+    group: '1000'
+
+- name: Create notebook_data directory
+  ansible.builtin.file:
+    path: '{{ open_notebook_project_dir }}/notebook_data'
+    state: directory
+    mode: '0755'
+
+- name: Pull and start Open Notebook LM
+  community.docker.docker_compose_v2:
+    project_src: '{{ open_notebook_project_dir }}'
+    state: present
+    pull: missing

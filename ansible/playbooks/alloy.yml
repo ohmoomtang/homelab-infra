@@ -1,0 +1,6 @@
+- name: Setup Grafana Alloy on all LXC
+  hosts: lxc
+  become: yes
+  roles:
+    - role: alloy
+      when: ansible_os_family == "Debian"
