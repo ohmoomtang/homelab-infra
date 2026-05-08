@@ -1,0 +1,17 @@
+---
+- name: Update all LXC containers
+  hosts: lxc
+  become: true
+  tasks:
+    - name: Update apt packages (Debian/Ubuntu)
+      apt:
+        update_cache: yes
+        upgrade: dist
+        autoremove: yes
+      when: ansible_os_family == "Debian"
+
+    - name: Update apk packages (Alpine)
+      community.general.apk:
+        update_cache: yes
+        upgrade: yes
+      when: ansible_os_family == "Alpine"
