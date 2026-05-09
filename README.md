@@ -55,10 +55,12 @@ LXC containers run unprivileged on a ZFS storage backend (`local-zfs`), bridged 
 - Terraform >= 1.2
 - Ansible >= 2.13
 - Python 3.x
-- `community.docker` and `grafana.grafana` Ansible collections
+- `community.docker`, `grafana.grafana`, and `community.general` Ansible collections
+  - All three are bundled with `pip install ansible` (no extra step needed)
+  - If using `ansible-core`, install them manually:
 
 ```bash
-ansible-galaxy collection install community.docker grafana.grafana
+ansible-galaxy collection install community.docker grafana.grafana community.general
 ```
 
 ## Getting Started
@@ -97,13 +99,14 @@ terraform apply
 
 ### 4. Configure Ansible Vault
 
-Sensitive credentials are stored in per-role vault files. Encrypt each one before running playbooks:
+Sensitive credentials are stored in per-role vault files (already encrypted). Edit each one to fill in your own credentials:
 
 ```bash
-ansible-vault encrypt ansible/roles/monitoring/vault.yml
-ansible-vault encrypt ansible/roles/adguard-sync/vault.yml
-ansible-vault encrypt ansible/roles/rabbitmq/vault.yml
-ansible-vault encrypt ansible/roles/opennotebooklm/vars/vault.yml
+ansible-vault edit ansible/roles/monitoring/vault.yml
+ansible-vault edit ansible/roles/adguard-sync/vault.yml
+ansible-vault edit ansible/roles/rabbitmq/vault.yml
+ansible-vault edit ansible/roles/opennotebooklm/vars/vault.yml
+ansible-vault edit ansible/inventories/k3s/vault.yml
 ```
 
 ### 5. Run Ansible Playbooks
@@ -135,6 +138,20 @@ ansible-playbook -i inventories/homelab playbooks/update_lxc.yml
 ```
 
 > **Note:** Vault-encrypted files require `--ask-vault-pass` or a vault password file.
+
+### 6. Deploy K3s Cluster
+
+Run K3s-specific playbooks using the `k3s` inventory. Vault credentials are stored in `inventories/k3s/vault.yml`.
+
+```bash
+cd ansible
+
+# Run a playbook against the K3s cluster
+ansible-playbook -i inventories/k3s playbooks/<name>.yml --ask-vault-pass
+
+# Target a single node
+ansible-playbook -i inventories/k3s playbooks/<name>.yml --limit k3s-control-plane --ask-vault-pass
+```
 
 ## Repository Structure
 
@@ -195,6 +212,15 @@ homelab-infra/
         ├── opennotebooklm/           # OpenNotebookLM + SurrealDB via Compose
         ├── vert/                     # Vert file converter via Compose
         └── alloy/                    # Grafana Alloy agent (Debian hosts only)
+├── helm/
+│   ├── loki/
+│   │   └── values.yaml               # Loki log aggregation
+│   ├── promtail/
+│   │   └── values.yaml               # Promtail log shipper
+│   └── tempo/
+│       └── values.yaml               # Tempo distributed tracing
+└── k8s/
+    └── manifests/                    # future K3s workload manifests
 ```
 
 ## IP Addressing Scheme
