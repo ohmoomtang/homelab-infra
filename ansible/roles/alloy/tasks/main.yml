@@ -10,6 +10,11 @@
   ansible.builtin.include_role:
     name: grafana.grafana.alloy
   vars:
+    # alloy runs as the unprivileged "alloy" user; it must be in the docker
+    # group to read /var/run/docker.sock, otherwise log collection silently
+    # fails with "permission denied" and nothing reaches Loki.
+    alloy_user_groups:
+      - docker
     alloy_env_file_vars:
       CUSTOM_ARGS: '--server.http.listen-addr=0.0.0.0:12345'
     alloy_config: |
@@ -52,6 +57,9 @@
       }
 
       loki.write "default" {
+        // additive host label so logs can be told apart per host without
+        // touching the container / service_name labels the dashboards use
+        external_labels = { host = "{{ inventory_hostname }}" }
         endpoint {
           url = "{{ loki_endpoint }}"
         }
