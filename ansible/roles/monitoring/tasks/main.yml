@@ -72,18 +72,12 @@
           static_configs:
             - targets: ["localhost:9090"]
 
+        # Alloy agent self-metrics (alloy_*, loki_source_docker_*, etc.).
+        # Node metrics (node_*) are intentionally NOT scraped here: every
+        # Alloy agent pushes them via prometheus.remote_write
+        # (instance=<hostname>), so a pull-based node_exporter job would
+        # double-count those series.
         - job_name: "alloy"
-          static_configs:
-            - targets:
-                - "192.168.0.83:12345"  # adguard-sync
-                - "192.168.0.81:12345"  # monitoring
-                - "192.168.0.82:12345"  # uptime-kuma
-                - "192.168.0.21:12345"  # rabbitmq
-                - "192.168.0.41:12345"  # jellyfin
-                - "192.168.0.22:12345"  # supabase
-
-        - job_name: "node_exporter"
-          metrics_path: /api/v0/component/prometheus.exporter.unix.node/metrics
           static_configs:
             - targets:
                 - "192.168.0.83:12345"  # adguard-sync
