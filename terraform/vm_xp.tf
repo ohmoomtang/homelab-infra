@@ -3,7 +3,7 @@ resource "proxmox_virtual_environment_vm" "windows_xp" {
   description = "Windows XP - managed by Terraform"
   tags        = ["windows_xp", "terraform"]
   node_name   = var.proxmox_node
-  vm_id       = 181
+  vm_id       = 182
   cpu {
     cores = 2
     type  = "x86-64-v2-AES"
