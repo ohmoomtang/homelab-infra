@@ -1,9 +1,0 @@
----
-- name: Setup Traefik
-  hosts:
-    - traefik
-  become: true
-  roles:
-    - base
-    - docker
-    - traefik

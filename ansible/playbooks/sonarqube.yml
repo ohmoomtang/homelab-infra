@@ -1,9 +1,0 @@
----
-- name: Setup Sonarqube
-  hosts:
-    - sonarqube
-  become: true
-  roles:
-    - base
-    - docker
-    - sonarqube

@@ -1,8 +1,0 @@
----
-- name: Setup Vert file converter
-  hosts: vert
-  become: true
-  roles:
-    - base
-    - docker
-    - vert

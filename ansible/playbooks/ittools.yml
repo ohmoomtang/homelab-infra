@@ -1,9 +1,0 @@
----
-- name: Setup IT Tools
-  hosts:
-    - it-tools
-  become: true
-  roles:
-    - base-alpine
-    - docker-alpine
-    - it-tools

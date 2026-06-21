@@ -1,8 +1,0 @@
----
-- name: Setup based host for NextJS application
-  hosts: blog
-  become: yes
-  roles:
-    - base
-    - docker
-    - cloudflared-blog

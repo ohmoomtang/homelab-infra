@@ -1,8 +1,0 @@
----
-- name: Setup RabbitMQ
-  hosts: rabbitmq
-  become: true
-  roles:
-    - base
-    - docker
-    - rabbitmq

@@ -1,4 +1,8 @@
 ---
+- name: Include vault vars
+  ansible.builtin.include_vars:
+    file: vault.yml
+
 - name: Create Open Notebook data directory
   ansible.builtin.file:
     path: '{{ open_notebook_project_dir }}'
