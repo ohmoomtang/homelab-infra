@@ -36,7 +36,7 @@ variable "default_lxc_root_password" {
   }
 }
 
-variable "deafult_gateway" {
+variable "default_gateway" {
   type        = string
   description = "Default Gateway (Router -> ISP) IP Address"
   default     = "192.168.0.1"

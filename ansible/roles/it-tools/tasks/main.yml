@@ -1,0 +1,23 @@
+---
+- name: Create /opt/it-tools directory
+  ansible.builtin.file:
+    path: /opt/it-tools
+    state: directory
+    mode: '0755'
+
+- name: Copy docker-compose.yml
+  ansible.builtin.copy:
+    dest: /opt/it-tools/docker-compose.yml
+    content: |
+      services:
+        it-tools:
+          image: corentinth/it-tools:latest
+          ports:
+            - "8080:80"
+          restart: unless-stopped
+
+- name: Start Docker Compose
+  community.docker.docker_compose_v2:
+    project_src: /opt/it-tools
+    state: present
+    pull: missing

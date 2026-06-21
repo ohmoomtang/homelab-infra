@@ -26,7 +26,7 @@ resource "proxmox_virtual_environment_container" "rabbitmq" {
     ip_config {
       ipv4 {
         address = "192.168.0.21/24"
-        gateway = var.deafult_gateway
+        gateway = var.default_gateway
       }
     }
 

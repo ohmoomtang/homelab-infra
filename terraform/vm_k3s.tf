@@ -38,7 +38,7 @@ resource "proxmox_virtual_environment_vm" "k3s_nodes" {
     ip_config {
       ipv4 {
         address = "${each.value.ip}/24"
-        gateway = var.deafult_gateway
+        gateway = var.default_gateway
       }
     }
     user_account {

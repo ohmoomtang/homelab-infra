@@ -40,13 +40,13 @@ ansible -i inventories/homelab all -m ping
 
 Sensitive credentials are stored in per-role vault files, not a single global vault:
 
-| Role | Vault file |
-| --- | --- |
-| adguard-sync | `roles/adguard-sync/vault.yml` |
-| monitoring | `roles/monitoring/vault.yml` |
-| rabbitmq | `roles/rabbitmq/vault.yml` |
+| Role           | Vault file                            |
+| -------------- | ------------------------------------- |
+| adguard-sync   | `roles/adguard-sync/vault.yml`        |
+| monitoring     | `roles/monitoring/vault.yml`          |
+| rabbitmq       | `roles/rabbitmq/vault.yml`            |
 | opennotebooklm | `roles/opennotebooklm/vars/vault.yml` |
-| k3s inventory | `inventories/k3s/vault.yml` |
+| k3s inventory  | `inventories/k3s/vault.yml`           |
 
 Encrypt a new vault file: `ansible-vault encrypt <path>`. Edit in place: `ansible-vault edit <path>`.
 
@@ -72,4 +72,4 @@ ansible-galaxy collection install community.docker grafana.grafana community.gen
 
 ## Typo to be aware of
 
-`var.deafult_gateway` (not `default_gateway`) is used throughout the Terraform VM/LXC resources — this is the existing variable name in `variables.tf`, do not "fix" it without updating all references.
+`var.default_gateway` (not `default_gateway`) is used throughout the Terraform VM/LXC resources — this is the existing variable name in `variables.tf`, do not "fix" it without updating all references.

@@ -1,0 +1,8 @@
+---
+- name: Setup Immich
+  hosts: immich
+  become: yes
+  roles:
+    - base
+    - docker
+    - immich

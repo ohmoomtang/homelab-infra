@@ -1,0 +1,9 @@
+---
+- name: Setup GitHub Action
+  hosts:
+    - github-action
+  become: true
+  roles:
+    - base
+    - docker
+    - github_action

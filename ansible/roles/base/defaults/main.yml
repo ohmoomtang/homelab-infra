@@ -7,6 +7,8 @@ base_packages:
   - ufw
   - unattended-upgrades
   - python3-requests
+  - unzip
+  - jq
 
 ssh_port: 22
 ssh_permit_root_login: 'prohibit-password'

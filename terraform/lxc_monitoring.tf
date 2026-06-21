@@ -30,7 +30,7 @@ resource "proxmox_virtual_environment_container" "monitoring" {
     ip_config {
       ipv4 {
         address = "192.168.0.81/24"
-        gateway = var.deafult_gateway
+        gateway = var.default_gateway
       }
     }
 

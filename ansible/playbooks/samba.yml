@@ -1,0 +1,8 @@
+---
+- name: Setup Samba
+  hosts:
+    - samba
+  become: true
+  roles:
+    - base-alpine
+    - samba
