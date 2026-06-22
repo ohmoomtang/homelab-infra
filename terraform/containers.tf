@@ -35,8 +35,8 @@ locals {
       vmid        = 102
       hostname    = "adguard-sync"
       ip          = "192.168.0.83"
-      cores       = 1
-      memory      = 256
+      cores       = 2
+      memory      = 1024
       disk_size   = 2
       os_type     = "ubuntu"
       tags        = ["utility", "terraform"]
