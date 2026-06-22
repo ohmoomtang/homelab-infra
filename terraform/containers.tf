@@ -58,7 +58,7 @@ locals {
       hostname    = "uptime-kuma"
       ip          = "192.168.0.82"
       cores       = 1
-      memory      = 512
+      memory      = 1024
       disk_size   = 4
       os_type     = "ubuntu"
       tags        = ["utility", "terraform"]
