@@ -60,6 +60,7 @@
         alertmanager_url: http://localhost:9093
 
 - name: Copy prometheus.yml
+  register: prometheus_config
   ansible.builtin.copy:
     dest: /opt/monitoring/prometheus.yml
     content: |
@@ -124,6 +125,16 @@
   until: result.status == 200
   retries: 15
   delay: 5
+
+- name: Reload Prometheus config
+  # docker_compose_v2 won't recreate the container when only the mounted
+  # prometheus.yml changes, so the running process keeps the old config in
+  # memory. Hit the lifecycle endpoint to reload it when the file changed.
+  ansible.builtin.uri:
+    url: 'http://localhost:9090/-/reload'
+    method: POST
+    status_code: 200
+  when: prometheus_config.changed
 
 - name: Done!
   ansible.builtin.debug:
