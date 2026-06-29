@@ -61,8 +61,6 @@ Sensitive credentials are stored in per-role vault files, not a single global va
 | -------------- | ------------------------------------- |
 | adguard-sync   | `roles/adguard-sync/vault.yml`        |
 | monitoring     | `roles/monitoring/vault.yml`          |
-| rabbitmq       | `roles/rabbitmq/vault.yml`            |
-| opennotebooklm | `roles/opennotebooklm/vault.yml`      |
 | k3s inventory  | `inventories/k3s/vault.yml`           |
 
 Encrypt a new vault file: `ansible-vault encrypt <path>`. Edit in place: `ansible-vault edit <path>`.

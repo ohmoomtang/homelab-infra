@@ -17,10 +17,8 @@ Proxmox VE (Dell OptiPlex Micro, i5-8500T, 32GB RAM)
     │   ├── AdGuard Sync         192.168.0.83  (Config Sync)
     │   ├── Monitoring           192.168.0.81  (Grafana + Loki + Prometheus)
     │   ├── Uptime Kuma          192.168.0.82  (Uptime Monitoring)
-    │   ├── RabbitMQ             192.168.0.21  (Message Broker)
     │   ├── Supabase             192.168.0.22  (Backend Platform)
     │   ├── Jellyfin             192.168.0.41  (Media Server)
-    │   ├── OpenNotebookLM       192.168.0.51  (AI Notebook)
     │   └── Vert                 192.168.0.52  (File Converter)
     │
     └── K3s VMs (cloned from Ubuntu template)
@@ -44,9 +42,7 @@ LXC containers run unprivileged on a ZFS storage backend (`local-zfs`), bridged 
 | Log/Metrics Collection   | Grafana Alloy                    |
 | Uptime Monitoring        | Uptime Kuma                      |
 | Media                    | Jellyfin                         |
-| Message Broker           | RabbitMQ                         |
 | Backend Platform         | Supabase (self-hosted via CLI)   |
-| AI Notebook              | OpenNotebookLM                   |
 | File Converter           | Vert                             |
 
 ## Prerequisites
@@ -104,8 +100,6 @@ Sensitive credentials are stored in per-role vault files (already encrypted). Ed
 ```bash
 ansible-vault edit ansible/roles/monitoring/vault.yml
 ansible-vault edit ansible/roles/adguard-sync/vault.yml
-ansible-vault edit ansible/roles/rabbitmq/vault.yml
-ansible-vault edit ansible/roles/opennotebooklm/vars/vault.yml
 ansible-vault edit ansible/inventories/k3s/vault.yml
 ```
 
@@ -124,10 +118,8 @@ ansible-playbook -i inventories/homelab playbooks/adguard.yml
 ansible-playbook -i inventories/homelab playbooks/adguardsync.yml
 ansible-playbook -i inventories/homelab playbooks/monitoring.yml
 ansible-playbook -i inventories/homelab playbooks/uptimekuma.yml
-ansible-playbook -i inventories/homelab playbooks/rabbitmq.yml
 ansible-playbook -i inventories/homelab playbooks/jellyfin.yml
 ansible-playbook -i inventories/homelab playbooks/supabase.yml
-ansible-playbook -i inventories/homelab playbooks/opennotebooklm.yml
 ansible-playbook -i inventories/homelab playbooks/vert.yml
 
 # Deploy Alloy metrics/log agent on all Debian hosts
@@ -167,9 +159,7 @@ homelab-infra/
 │   ├── lxc_monitoring.tf
 │   ├── lxc_uptime_kuma.tf
 │   ├── lxc_jellyfin.tf
-│   ├── lxc_rabbitmq.tf
 │   ├── lxc_supabase.tf
-│   ├── lxc_open_notebook_lm.tf
 │   ├── lxc_vert.tf
 │   └── terraform.tfvars.example
 └── ansible/
@@ -190,10 +180,8 @@ homelab-infra/
     │   ├── adguardsync.yml
     │   ├── monitoring.yml
     │   ├── uptimekuma.yml
-    │   ├── rabbitmq.yml
     │   ├── jellyfin.yml
     │   ├── supabase.yml
-    │   ├── opennotebooklm.yml
     │   ├── vert.yml
     │   ├── alloy.yml
     │   └── update_lxc.yml            # Rolling APT/APK updates
@@ -206,10 +194,8 @@ homelab-infra/
         ├── adguard-sync/             # AdGuard config sync (cron every 10m)
         ├── monitoring/               # Grafana + Prometheus + Loki via Compose
         ├── uptimekuma/               # Uptime Kuma via Compose
-        ├── rabbitmq/                 # RabbitMQ with management UI
         ├── jellyfin/                 # Jellyfin with GPU passthrough
         ├── supabase/                 # Supabase via CLI + systemd
-        ├── opennotebooklm/           # OpenNotebookLM + SurrealDB via Compose
         ├── vert/                     # Vert file converter via Compose
         └── alloy/                    # Grafana Alloy agent (Debian hosts only)
 ├── helm/
@@ -245,8 +231,6 @@ homelab-infra/
 | 103   | monitoring        | 192.168.0.81  | 2   | 2 GB   | Ubuntu |
 | 104   | uptime-kuma       | 192.168.0.82  | 1   | 512 MB | Ubuntu |
 | 105   | jellyfin          | 192.168.0.41  | 4   | 2 GB   | Ubuntu |
-| 106   | rabbitmq          | 192.168.0.21  | 1   | 2 GB   | Ubuntu |
-| 107   | opennotebooklm    | 192.168.0.51  | 2   | 4 GB   | Ubuntu |
 | 108   | vert              | 192.168.0.52  | 1   | 512 MB | Ubuntu |
 | 109   | supabase          | 192.168.0.22  | 4   | 8 GB   | Ubuntu |
 

@@ -76,16 +76,6 @@
     - traefik
   tags: [traefik, debian, utility]
 
-# --- middleware ------------------------------------------------------------
-- name: Setup RabbitMQ
-  hosts: rabbitmq
-  become: true
-  roles:
-    - base
-    - docker
-    - rabbitmq
-  tags: [rabbitmq, debian, middleware]
-
 # --- backend ---------------------------------------------------------------
 - name: Setup Supabase
   hosts: supabase
@@ -135,15 +125,6 @@
   tags: [immich, debian, media]
 
 # --- general_app -----------------------------------------------------------
-- name: Setup OpenNotebookLM
-  hosts: opennotebooklm
-  become: true
-  roles:
-    - base
-    - docker
-    - opennotebooklm
-  tags: [opennotebooklm, debian, general_app]
-
 - name: Setup Vert file converter
   hosts: vert
   become: true

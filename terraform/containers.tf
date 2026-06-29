@@ -64,28 +64,6 @@ locals {
       tags        = ["utility", "terraform"]
       description = "Uptime Kuma - Managed by Terraform"
     }
-    "rabbitmq" = {
-      vmid        = 106
-      hostname    = "rabbitmq"
-      ip          = "192.168.0.21"
-      cores       = 1
-      memory      = 2048
-      disk_size   = 8
-      os_type     = "ubuntu"
-      tags        = ["middleware", "terraform"]
-      description = "RabbitMQ - Managed by Terraform"
-    }
-    "opennotebooklm" = {
-      vmid        = 107
-      hostname    = "opennotebooklm"
-      ip          = "192.168.0.51"
-      cores       = 2
-      memory      = 4096
-      disk_size   = 10
-      os_type     = "ubuntu"
-      tags        = ["general-app", "terraform"]
-      description = "OpenNotebookLM - Managed by Terraform"
-    }
     "vert" = {
       vmid        = 108
       hostname    = "vert"
