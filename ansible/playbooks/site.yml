@@ -163,6 +163,16 @@
     - cloudflared-blog
   tags: [blog, debian, self_app]
 
+# --- analytics -------------------------------------------------------------
+- name: Setup Umami analytics
+  hosts: umami
+  become: true
+  roles:
+    - base
+    - docker
+    - umami
+  tags: [umami, debian, analytics]
+
 # --- portainer -------------------------------------------------------------
 - name: Setup Portainer Server
   hosts: portainer-server

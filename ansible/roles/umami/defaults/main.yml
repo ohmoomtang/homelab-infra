@@ -1,0 +1,4 @@
+---
+umami_image: ghcr.io/umami-software/umami:postgresql-latest
+umami_port: 3000
+umami_data_dir: /opt/umami
