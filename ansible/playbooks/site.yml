@@ -144,6 +144,15 @@
     - cloudflared-blog
   tags: [blog, debian, self_app]
 
+# --- realbreakfast --------------------------------------------------------
+- name: Setup realbreakfast web app
+  hosts: realbreakfast
+  become: true
+  roles:
+    - base
+    - docker
+  tags: [realbreakfast, debian, self_app]
+
 # --- analytics -------------------------------------------------------------
 - name: Setup Umami analytics
   hosts: umami

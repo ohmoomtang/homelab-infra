@@ -12,6 +12,7 @@
       services:
         sonarqube:
           image: sonarqube:community
+          restart: unless-stopped
           hostname: sonarqube
           container_name: sonarqube
           depends_on:
@@ -34,6 +35,7 @@
             - sonarqube_net
         db:
           image: postgres:17
+          restart: unless-stopped
           healthcheck:
             test: [ "CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}" ]
             interval: 10s

@@ -40,6 +40,12 @@ portainer:
           hosts:
             blog:
               ansible_host: 192.168.0.11
+            realbreakfast:
+              ansible_host: 192.168.0.12
+        analytics:
+          hosts:
+            umami:
+              ansible_host: 192.168.0.25
         devtools:
           hosts:
             sonarqube:

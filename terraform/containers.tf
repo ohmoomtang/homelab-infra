@@ -194,6 +194,18 @@ locals {
       tags        = ["analytics", "terraform"]
       description = "Umami - Web Analytics - realbreakfast.co - Managed by Terraform"
     }
+
+    "nextjs-realbreakfast" = {
+      vmid        = 119
+      hostname    = "realbreakfast"
+      ip          = "192.168.0.12"
+      cores       = 2
+      memory      = 4096
+      disk_size   = 20
+      os_type     = "ubuntu"
+      tags        = ["website", "terraform"]
+      description = "realbreakfast.co - Web App - Managed by Terraform"
+    }
   }
 }
 
