@@ -1,1 +1,14 @@
 .claude/
+
+# Terraform — never commit state or secrets (may contain plaintext credentials)
+terraform/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+crash.log
+*.tfvars
+!*.tfvars.example
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
