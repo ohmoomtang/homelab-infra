@@ -1,0 +1,12 @@
+# Managed by Ansible - do not edit manually!
+services:
+  umami:
+    image: {{ umami_image }}
+    container_name: umami
+    environment:
+      DATABASE_URL: "{{ umami_database_url }}"
+      DATABASE_TYPE: postgresql
+      APP_SECRET: "{{ umami_app_secret }}"
+    ports:
+      - "{{ umami_port }}:3000"
+    restart: unless-stopped

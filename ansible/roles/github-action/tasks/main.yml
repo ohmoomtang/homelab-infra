@@ -1,0 +1,60 @@
+---
+- name: Include vault vars
+  ansible.builtin.include_vars:
+    file: vault.yml
+
+- name: Create /opt/actions-runner directory
+  ansible.builtin.file:
+    path: /opt/actions-runner
+    state: directory
+    mode: '0755'
+
+- name: Download action-runner binary
+  ansible.builtin.get_url:
+    dest: /opt/actions-runner
+    url: https://github.com/actions/runner/releases/download/v{{ github_action_version }}/actions-runner-linux-x64-{{ github_action_version }}.tar.gz
+
+- name: Extract package
+  ansible.builtin.unarchive:
+    dest: /opt/actions-runner
+    src: /opt/actions-runner/actions-runner-linux-x64-{{ github_action_version }}.tar.gz
+    remote_src: yes
+
+- name: Create runner user
+  ansible.builtin.user:
+    name: runner
+    shell: /bin/bash
+    system: yes
+    create_home: yes
+
+- name: Add runner user to docker group
+  ansible.builtin.user:
+    name: runner
+    groups: docker
+    append: yes
+
+- name: Set ownership of actions-runner directory
+  ansible.builtin.file:
+    path: /opt/actions-runner
+    owner: runner
+    group: runner
+    recurse: yes
+
+- name: Configure runner (if not already configured)
+  ansible.builtin.shell: /opt/actions-runner/config.sh --url {{ github_repo_url }} --token {{ github_action_token }} --unattended
+  args:
+    creates: /opt/actions-runner/.runner
+  become_user: runner
+
+- name: Install runner as systemd service
+  ansible.builtin.shell: ./svc.sh install runner
+  args:
+    chdir: /opt/actions-runner
+    creates: /etc/systemd/system/actions.runner.ohmoomtang-k3s-gitops.githubaction.service
+
+- name: Start and enable runner service
+  ansible.builtin.systemd:
+    name: actions.runner.ohmoomtang-k3s-gitops.githubaction.service
+    state: started
+    enabled: yes
+    daemon_reload: yes

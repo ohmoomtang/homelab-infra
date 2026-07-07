@@ -1,0 +1,2 @@
+traefik_data_dir: /opt/traefik
+traefik_version: v3.7

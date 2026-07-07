@@ -1,0 +1,181 @@
+---
+# Consolidated provisioning playbook for all LXC services.
+#
+# Run everything:        ansible-playbook -i inventories/homelab playbooks/site.yml --ask-vault-pass
+# Run one service:       ansible-playbook -i inventories/homelab playbooks/site.yml --tags immich --ask-vault-pass
+# Run a category:        ansible-playbook -i inventories/homelab playbooks/site.yml --tags media --ask-vault-pass
+# List available tags:   ansible-playbook -i inventories/homelab playbooks/site.yml --list-tags
+#
+# Cross-cutting / operational playbooks are kept separate on purpose:
+#   base.yml        - base hardening across every LXC
+#   alloy.yml       - Grafana Alloy agent across every Debian LXC
+#   update-lxc.yml  - rolling package updates
+
+# --- utility ---------------------------------------------------------------
+- name: Setup AdGuard Home
+  hosts:
+    - adguard-primary
+    - adguard-secondary
+  become: true
+  roles:
+    - base-alpine
+    - docker-alpine
+    - adguard
+  tags: [adguard, alpine, utility]
+
+- name: Setup AdGuard Sync
+  hosts: adguard-sync
+  become: true
+  roles:
+    - base
+    - docker
+    - adguard-sync
+  tags: [adguard-sync, debian, utility]
+
+- name: Setup Monitoring Stack (Grafana + Loki + Prometheus)
+  hosts: monitoring
+  become: true
+  roles:
+    - base
+    - docker
+    - monitoring
+  tags: [monitoring, debian, utility]
+
+- name: Setup Uptime Kuma
+  hosts: uptime-kuma
+  become: true
+  roles:
+    - base
+    - docker
+    - uptimekuma
+  tags: [uptimekuma, debian, utility]
+
+- name: Setup Samba
+  hosts: samba
+  become: true
+  roles:
+    - base-alpine
+    - samba
+  tags: [samba, alpine, utility]
+
+- name: Setup IT Tools
+  hosts: it-tools
+  become: true
+  roles:
+    - base-alpine
+    - docker-alpine
+    - it-tools
+  tags: [it-tools, alpine, utility]
+
+- name: Setup Traefik
+  hosts: traefik
+  become: true
+  roles:
+    - base
+    - docker
+    - traefik
+  tags: [traefik, debian, utility]
+
+# --- backend ---------------------------------------------------------------
+- name: Setup Supabase
+  hosts: supabase
+  become: true
+  roles:
+    - base
+    - docker
+    - supabase
+  tags: [supabase, debian, backend]
+
+# --- devtools --------------------------------------------------------------
+- name: Setup SonarQube
+  hosts: sonarqube
+  become: true
+  roles:
+    - base
+    - docker
+    - sonarqube
+  tags: [sonarqube, debian, devtools]
+
+- name: Setup GitHub Action runner
+  hosts: github-action
+  become: true
+  roles:
+    - base
+    - docker
+    - github-action
+  tags: [github-action, debian, devtools]
+
+# --- media -----------------------------------------------------------------
+- name: Setup Jellyfin
+  hosts: jellyfin
+  become: true
+  roles:
+    - base
+    - docker
+    - jellyfin
+  tags: [jellyfin, debian, media]
+
+- name: Setup Immich
+  hosts: immich
+  become: true
+  roles:
+    - base
+    - docker
+    - immich
+  tags: [immich, debian, media]
+
+# --- general_app -----------------------------------------------------------
+- name: Setup Vert file converter
+  hosts: vert
+  become: true
+  roles:
+    - base
+    - docker
+    - vert
+  tags: [vert, debian, general_app]
+
+# --- self_app --------------------------------------------------------------
+- name: Setup NextJS blog (Cloudflare tunnel)
+  hosts: blog
+  become: true
+  roles:
+    - base
+    - docker
+    - cloudflared-blog
+  tags: [blog, debian, self_app]
+
+# --- realbreakfast --------------------------------------------------------
+- name: Setup realbreakfast web app
+  hosts: realbreakfast
+  become: true
+  roles:
+    - base
+    - docker
+  tags: [realbreakfast, debian, self_app]
+
+# --- analytics -------------------------------------------------------------
+- name: Setup Umami analytics
+  hosts: umami
+  become: true
+  roles:
+    - base
+    - docker
+    - umami
+  tags: [umami, debian, analytics]
+
+# --- portainer -------------------------------------------------------------
+- name: Setup Portainer Server
+  hosts: portainer-server
+  become: true
+  roles:
+    - base
+    - docker
+    - portainer-server
+  tags: [portainer-server, portainer, debian]
+
+- name: Setup Portainer Agent
+  hosts: agent
+  become: true
+  roles:
+    - portainer-agent
+  tags: [portainer-agent, portainer]

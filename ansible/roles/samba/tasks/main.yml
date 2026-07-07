@@ -1,0 +1,32 @@
+---
+- name: Install Samba package
+  community.general.apk:
+    name:
+      - samba
+    state: present
+
+- name: Copy smb.conf
+  ansible.builtin.copy:
+    dest: /etc/samba/smb.conf
+    content: |
+      [global]
+        workgroup = WORKGROUP
+        security = user
+        map to guest = bad user
+
+      [home]
+        path = /shares/home
+        browseable = yes
+        writable = yes
+        guest ok = yes
+        force user = root
+
+- name: Enable service samba
+  ansible.builtin.service:
+    name: samba
+    enabled: yes
+
+- name: Start service samba
+  ansible.builtin.service:
+    name: samba
+    state: started

@@ -1,0 +1,52 @@
+portainer:
+  children:
+    server:
+      hosts:
+        portainer-server:
+          ansible_host: 192.168.0.89
+    agent:
+      children:
+        utility:
+          hosts:
+            adguard-primary:
+              ansible_host: 192.168.0.84
+            adguard-secondary:
+              ansible_host: 192.168.0.85
+            adguard-sync:
+              ansible_host: 192.168.0.83
+            monitoring:
+              ansible_host: 192.168.0.81
+            uptime-kuma:
+              ansible_host: 192.168.0.82
+            it-tools:
+              ansible_host: 192.168.0.87
+            traefik:
+              ansible_host: 192.168.0.90
+        backend:
+          hosts:
+            supabase:
+              ansible_host: 192.168.0.22
+        media:
+          hosts:
+            jellyfin:
+              ansible_host: 192.168.0.41
+            immich:
+              ansible_host: 192.168.0.42
+        general_app:
+          hosts:
+            vert:
+              ansible_host: 192.168.0.52
+        self_app:
+          hosts:
+            blog:
+              ansible_host: 192.168.0.11
+            realbreakfast:
+              ansible_host: 192.168.0.12
+        analytics:
+          hosts:
+            umami:
+              ansible_host: 192.168.0.25
+        devtools:
+          hosts:
+            sonarqube:
+              ansible_host: 192.168.0.23

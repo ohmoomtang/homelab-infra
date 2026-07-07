@@ -11,7 +11,7 @@ variable "proxmox_pve_endpoint" {
 variable "proxmox_pve_api_token" {
   type        = string
   description = "API Token for Proxmox PVE"
-  sensitive = true
+  sensitive   = true
 
   validation {
     condition     = can(regex("^.+@.+!.+=.+$", var.proxmox_pve_api_token))
@@ -28,12 +28,31 @@ variable "proxmox_node" {
 variable "default_lxc_root_password" {
   type        = string
   description = "Default root password for each Proxmox LXC"
-  sensitive = true
+  sensitive   = true
 
   validation {
     condition     = length(var.default_lxc_root_password) >= 8
     error_message = "Password must be at least 8 characters"
   }
+}
+
+variable "default_gateway" {
+  type        = string
+  description = "Default Gateway (Router -> ISP) IP Address"
+  default     = "192.168.0.1"
+}
+
+#K3s
+variable "k3s_ubuntu_template_vmid" {
+  type        = number
+  description = "Ubuntu VM template for K3s master and worker nodes"
+  default     = 9000
+}
+
+variable "k3s_node_password" {
+  type        = string
+  description = "Password for each K3s node"
+  sensitive   = true
 }
 
 variable "ssh_public_key" {

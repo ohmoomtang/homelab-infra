@@ -11,19 +11,23 @@ TP-Link Router (DHCP → AdGuard DNS)
     │
 Proxmox VE (Dell OptiPlex Micro, i5-8500T, 32GB RAM)
     │
-    ├── AdGuard Primary      192.168.0.84  (DNS, Ad-blocking)
-    ├── AdGuard Secondary    192.168.0.85  (DNS, Ad-blocking)
-    ├── AdGuard Sync         192.168.0.83  (Config Sync)
-    ├── Monitoring           192.168.0.81  (Grafana + Loki + Prometheus)
-    ├── Uptime Kuma          192.168.0.82  (Uptime Monitoring)
-    ├── RabbitMQ             192.168.0.21  (Message Broker)
-    ├── Supabase             192.168.0.22  (Backend Platform)
-    ├── Jellyfin             192.168.0.41  (Media Server)
-    ├── OpenNotebookLM       192.168.0.71  (AI Notebook)
-    └── Vert                 192.168.0.72  (File Converter)
+    ├── LXC Containers (unprivileged, ZFS-backed)
+    │   ├── AdGuard Primary      192.168.0.84  (DNS, Ad-blocking)
+    │   ├── AdGuard Secondary    192.168.0.85  (DNS, Ad-blocking)
+    │   ├── AdGuard Sync         192.168.0.83  (Config Sync)
+    │   ├── Monitoring           192.168.0.81  (Grafana + Loki + Prometheus)
+    │   ├── Uptime Kuma          192.168.0.82  (Uptime Monitoring)
+    │   ├── Supabase             192.168.0.22  (Backend Platform)
+    │   ├── Jellyfin             192.168.0.41  (Media Server)
+    │   └── Vert                 192.168.0.52  (File Converter)
+    │
+    └── K3s VMs (cloned from Ubuntu template)
+        ├── k3s-control-plane    192.168.0.71  (K3s server)
+        ├── k3s-worker-01        192.168.0.72  (K3s agent)
+        └── k3s-worker-02        192.168.0.73  (K3s agent)
 ```
 
-All containers run as unprivileged LXC on a ZFS storage backend (`local-zfs`), bridged on `vmbr0` with static IPs in the `192.168.0.0/24` subnet.
+LXC containers run unprivileged on a ZFS storage backend (`local-zfs`), bridged on `vmbr0`. K3s VMs are cloned from an Ubuntu VM template (VMID 9000) with static IPs in the `192.168.0.0/24` subnet.
 
 ## Stack
 
@@ -32,14 +36,13 @@ All containers run as unprivileged LXC on a ZFS storage backend (`local-zfs`), b
 | Hypervisor               | Proxmox VE                       |
 | IaC                      | Terraform (bpg/proxmox ~> 0.76)  |
 | Configuration Management | Ansible                          |
+| Container Orchestration  | K3s (Kubernetes)                 |
 | DNS & Ad-blocking        | AdGuard Home                     |
 | Monitoring               | Grafana, Prometheus, Loki        |
 | Log/Metrics Collection   | Grafana Alloy                    |
 | Uptime Monitoring        | Uptime Kuma                      |
 | Media                    | Jellyfin                         |
-| Message Broker           | RabbitMQ                         |
 | Backend Platform         | Supabase (self-hosted via CLI)   |
-| AI Notebook              | OpenNotebookLM                   |
 | File Converter           | Vert                             |
 
 ## Prerequisites
@@ -48,10 +51,12 @@ All containers run as unprivileged LXC on a ZFS storage backend (`local-zfs`), b
 - Terraform >= 1.2
 - Ansible >= 2.13
 - Python 3.x
-- `community.docker` and `grafana.grafana` Ansible collections
+- `community.docker`, `grafana.grafana`, and `community.general` Ansible collections
+  - All three are bundled with `pip install ansible` (no extra step needed)
+  - If using `ansible-core`, install them manually:
 
 ```bash
-ansible-galaxy collection install community.docker grafana.grafana
+ansible-galaxy collection install community.docker grafana.grafana community.general
 ```
 
 ## Getting Started
@@ -90,84 +95,118 @@ terraform apply
 
 ### 4. Configure Ansible Vault
 
-Sensitive credentials are stored in per-role vault files. Encrypt each one before running playbooks:
+Sensitive credentials are stored in per-role vault files (already encrypted). Edit each one to fill in your own credentials:
 
 ```bash
-ansible-vault encrypt ansible/roles/monitoring/vault.yml
-ansible-vault encrypt ansible/roles/adguard-sync/vault.yml
-ansible-vault encrypt ansible/roles/rabbitmq/vault.yml
-ansible-vault encrypt ansible/roles/opennotebooklm/vars/vault.yml
+ansible-vault edit ansible/roles/monitoring/vault.yml
+ansible-vault edit ansible/roles/adguard-sync/vault.yml
+ansible-vault edit ansible/inventories/k3s/vault.yml
 ```
 
 ### 5. Run Ansible Playbooks
 
-Run the base playbook first, then service-specific playbooks:
+Specify the inventory with `-i` since this repo uses multiple inventory directories.
 
 ```bash
 cd ansible
 
-# Harden and configure all hosts
-ansible-playbook playbooks/base.yml
+# Harden and configure all LXC hosts
+ansible-playbook -i inventories/homelab playbooks/base.yml
 
 # Deploy services
-ansible-playbook playbooks/adguard.yml
-ansible-playbook playbooks/adguardsync.yml
-ansible-playbook playbooks/monitoring.yml
-ansible-playbook playbooks/uptimekuma.yml
-ansible-playbook playbooks/rabbitmq.yml
-ansible-playbook playbooks/jellyfin.yml
-ansible-playbook playbooks/supabase.yml
-ansible-playbook playbooks/opennotebooklm.yml
-ansible-playbook playbooks/vert.yml
+ansible-playbook -i inventories/homelab playbooks/adguard.yml
+ansible-playbook -i inventories/homelab playbooks/adguardsync.yml
+ansible-playbook -i inventories/homelab playbooks/monitoring.yml
+ansible-playbook -i inventories/homelab playbooks/uptimekuma.yml
+ansible-playbook -i inventories/homelab playbooks/jellyfin.yml
+ansible-playbook -i inventories/homelab playbooks/supabase.yml
+ansible-playbook -i inventories/homelab playbooks/vert.yml
 
 # Deploy Alloy metrics/log agent on all Debian hosts
-ansible-playbook playbooks/alloy.yml
+ansible-playbook -i inventories/homelab playbooks/alloy.yml
+
+# Apply rolling APT/APK updates across all LXC containers
+ansible-playbook -i inventories/homelab playbooks/update_lxc.yml
 ```
 
 > **Note:** Vault-encrypted files require `--ask-vault-pass` or a vault password file.
+
+### 6. Deploy K3s Cluster
+
+Run K3s-specific playbooks using the `k3s` inventory. Vault credentials are stored in `inventories/k3s/vault.yml`.
+
+```bash
+cd ansible
+
+# Run a playbook against the K3s cluster
+ansible-playbook -i inventories/k3s playbooks/<name>.yml --ask-vault-pass
+
+# Target a single node
+ansible-playbook -i inventories/k3s playbooks/<name>.yml --limit k3s-control-plane --ask-vault-pass
+```
 
 ## Repository Structure
 
 ```
 homelab-infra/
 ├── terraform/
-│   ├── main.tf                  # 10 LXC container definitions
+│   ├── main.tf                      # Provider + backend config
 │   ├── variables.tf
 │   ├── outputs.tf
+│   ├── vm_k3s.tf                    # K3s VM cluster (1 server + 2 agents)
+│   ├── lxc_adguard.tf               # AdGuard primary + secondary
+│   ├── lxc_adguard_sync.tf
+│   ├── lxc_monitoring.tf
+│   ├── lxc_uptime_kuma.tf
+│   ├── lxc_jellyfin.tf
+│   ├── lxc_supabase.tf
+│   ├── lxc_vert.tf
 │   └── terraform.tfvars.example
 └── ansible/
     ├── ansible.cfg
-    ├── inventory/
-    │   ├── hosts.yml            # Hosts grouped by function
-    │   └── group_vars/
-    │       └── all.yml          # Global vars (user, SSH key, timezone)
+    ├── inventories/
+    │   ├── homelab/                  # LXC containers inventory
+    │   │   ├── hosts.yml
+    │   │   └── group_vars/
+    │   │       └── all.yml
+    │   └── k3s/                      # K3s cluster inventory
+    │       ├── hosts.yml
+    │       ├── group_vars/
+    │       │   └── all.yml           # k3s_channel, k3s_version, api_endpoint
+    │       └── vault.yml             # Encrypted K3s credentials
     ├── playbooks/
     │   ├── base.yml
     │   ├── adguard.yml
     │   ├── adguardsync.yml
     │   ├── monitoring.yml
     │   ├── uptimekuma.yml
-    │   ├── rabbitmq.yml
     │   ├── jellyfin.yml
     │   ├── supabase.yml
-    │   ├── opennotebooklm.yml
     │   ├── vert.yml
-    │   └── alloy.yml
+    │   ├── alloy.yml
+    │   └── update_lxc.yml            # Rolling APT/APK updates
     └── roles/
-        ├── base/                # Ubuntu/Debian hardening + admin user
-        ├── base-alpine/         # Alpine hardening + admin user
-        ├── docker/              # Docker CE on Ubuntu
-        ├── docker-alpine/       # Docker on Alpine
-        ├── adguard/             # AdGuard Home container
-        ├── adguard-sync/        # AdGuard config sync (cron every 10m)
-        ├── monitoring/          # Grafana + Prometheus + Loki via Compose
-        ├── uptimekuma/          # Uptime Kuma via Compose
-        ├── rabbitmq/            # RabbitMQ with management UI
-        ├── jellyfin/            # Jellyfin with GPU passthrough
-        ├── supabase/            # Supabase via CLI + systemd
-        ├── opennotebooklm/      # OpenNotebookLM + SurrealDB via Compose
-        ├── vert/                # Vert file converter via Compose
-        └── alloy/               # Grafana Alloy agent (Debian hosts only)
+        ├── base/                     # Ubuntu/Debian hardening + admin user
+        ├── base-alpine/              # Alpine hardening + admin user
+        ├── docker/                   # Docker CE on Ubuntu
+        ├── docker-alpine/            # Docker on Alpine
+        ├── adguard/                  # AdGuard Home container
+        ├── adguard-sync/             # AdGuard config sync (cron every 10m)
+        ├── monitoring/               # Grafana + Prometheus + Loki via Compose
+        ├── uptimekuma/               # Uptime Kuma via Compose
+        ├── jellyfin/                 # Jellyfin with GPU passthrough
+        ├── supabase/                 # Supabase via CLI + systemd
+        ├── vert/                     # Vert file converter via Compose
+        └── alloy/                    # Grafana Alloy agent (Debian hosts only)
+├── helm/
+│   ├── loki/
+│   │   └── values.yaml               # Loki log aggregation
+│   ├── promtail/
+│   │   └── values.yaml               # Promtail log shipper
+│   └── tempo/
+│       └── values.yaml               # Tempo distributed tracing
+└── k8s/
+    └── manifests/                    # future K3s workload manifests
 ```
 
 ## IP Addressing Scheme
@@ -176,23 +215,32 @@ homelab-infra/
 | ------------ | -------------------- |
 | 192.168.0.2x | Middleware / Backend |
 | 192.168.0.4x | Media                |
-| 192.168.0.7x | General apps         |
+| 192.168.0.5x | General apps         |
+| 192.168.0.7x | K3s cluster          |
 | 192.168.0.8x | Utility / Network    |
 
-## LXC Container Inventory
+## Inventory
 
-| VM ID | Hostname          | IP             | CPU | RAM   | OS      |
-| ----- | ----------------- | -------------- | --- | ----- | ------- |
-| 100   | adguard-primary   | 192.168.0.84   | 1   | 1 GB  | Alpine  |
-| 101   | adguard-secondary | 192.168.0.85   | 1   | 1 GB  | Alpine  |
-| 102   | adguard-sync      | 192.168.0.83   | 1   | 256 MB| Ubuntu  |
-| 103   | monitoring        | 192.168.0.81   | 2   | 2 GB  | Ubuntu  |
-| 104   | uptime-kuma       | 192.168.0.82   | 1   | 512 MB| Ubuntu  |
-| 105   | jellyfin          | 192.168.0.41   | 4   | 2 GB  | Ubuntu  |
-| 106   | rabbitmq          | 192.168.0.21   | 1   | 2 GB  | Ubuntu  |
-| 107   | opennotebooklm    | 192.168.0.71   | 2   | 4 GB  | Ubuntu  |
-| 108   | vert              | 192.168.0.72   | 1   | 512 MB| Ubuntu  |
-| 109   | supabase          | 192.168.0.22   | 4   | 8 GB  | Ubuntu  |
+### LXC Containers
+
+| VM ID | Hostname          | IP            | CPU | RAM    | OS     |
+| ----- | ----------------- | ------------- | --- | ------ | ------ |
+| 100   | adguard-primary   | 192.168.0.84  | 1   | 1 GB   | Alpine |
+| 101   | adguard-secondary | 192.168.0.85  | 1   | 1 GB   | Alpine |
+| 102   | adguard-sync      | 192.168.0.83  | 1   | 256 MB | Ubuntu |
+| 103   | monitoring        | 192.168.0.81  | 2   | 2 GB   | Ubuntu |
+| 104   | uptime-kuma       | 192.168.0.82  | 1   | 512 MB | Ubuntu |
+| 105   | jellyfin          | 192.168.0.41  | 4   | 2 GB   | Ubuntu |
+| 108   | vert              | 192.168.0.52  | 1   | 512 MB | Ubuntu |
+| 109   | supabase          | 192.168.0.22  | 4   | 8 GB   | Ubuntu |
+
+### K3s VMs
+
+| VM ID | Hostname          | IP            | CPU | RAM  | Role          |
+| ----- | ----------------- | ------------- | --- | ---- | ------------- |
+| 171   | k3s-control-plane | 192.168.0.71  | 2   | 4 GB | K3s server    |
+| 172   | k3s-worker-01     | 192.168.0.72  | 2   | 4 GB | K3s agent     |
+| 173   | k3s-worker-02     | 192.168.0.73  | 2   | 4 GB | K3s agent     |
 
 ## Manual Post-Provisioning Steps
 
