@@ -1,0 +1,6 @@
+rustfs_image_version: 'latest'
+rustfs_image: 'rustfs/rustfs:{{ rustfs_image_version }}'
+rustfs_api_port: 9000
+rustfs_console_port: 9001
+rustfs_data_dir: /opt/rustfs
+rustfs_volume_path: /data

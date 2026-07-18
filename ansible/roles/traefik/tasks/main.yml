@@ -22,3 +22,9 @@
     project_src: '{{ traefik_data_dir }}'
     state: present
     pull: missing
+
+- name: Deploy RustFS dynamic route (file provider)
+  ansible.builtin.template:
+    src: dynamic-rustfs.yml.j2
+    dest: '{{ traefik_data_dir }}/config/rustfs.yml'
+    mode: '0644'
