@@ -1,0 +1,17 @@
+# Managed by Ansible - do not edit manually!
+services:
+  rustfs:
+    image: {{ rustfs_image }}
+    container_name: rustfs
+    restart: unless-stopped
+    environment:
+      RUSTFS_ACCESS_KEY: "{{ rustfs_access_key }}"
+      RUSTFS_SECRET_KEY: "{{ rustfs_secret_key }}"
+      RUSTFS_VOLUMES: "{{ rustfs_volume_path }}"
+      RUSTFS_ADDRESS: ":{{ rustfs_api_port }}"
+      RUSTFS_CONSOLE_ENABLE: "true"
+    ports:
+      - "{{ rustfs_api_port }}:9000"
+      - "{{ rustfs_console_port }}:9001"
+    volumes:
+      - "{{ rustfs_volume_path }}:/data"

@@ -206,6 +206,17 @@ locals {
       tags        = ["website", "terraform"]
       description = "realbreakfast.co - Web App - Managed by Terraform"
     }
+    "rustfs" = {
+      vmid        = 120
+      hostname    = "rustfs"
+      ip          = "192.168.0.26"
+      cores       = 2
+      memory      = 2048
+      disk_size   = 8
+      os_type     = "ubuntu"
+      tags        = ["backend", "terraform"]
+      description = "RustFS - Managed by Terraform"
+    }
   }
 }
 

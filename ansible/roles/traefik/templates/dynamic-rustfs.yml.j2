@@ -1,0 +1,13 @@
+# Managed by Ansible - do not edit manually!
+http:
+  routers:
+    rustfs:
+      rule: "Host(`s3.home.oot`)"
+      entryPoints: ["websecure"]
+      service: rustfs
+      tls: {}
+  services:
+    rustfs:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.0.26:9000"

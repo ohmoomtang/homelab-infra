@@ -86,6 +86,15 @@
     - supabase
   tags: [supabase, debian, backend]
 
+- name: Setup RustFS object storage
+  hosts: rustfs
+  become: true
+  roles:
+    - base
+    - docker
+    - rustfs
+  tags: [rustfs, debian, backend]
+
 # --- devtools --------------------------------------------------------------
 - name: Setup SonarQube
   hosts: sonarqube
